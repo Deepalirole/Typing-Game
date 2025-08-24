@@ -1,0 +1,174 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
+
+public class TTypingGame extends JFrame implements ActionListener {
+    private JTextArea textToType;
+    private JTextField userInput;
+    private JLabel resultLabel, timerLabel;
+    private JButton startButton, resetButton;
+    private Timer gameTimer;
+    private long startTime;
+    private String currentText;
+    private int elapsedSeconds;
+
+    private String[] textSamples = {
+        "The quick brown fox jumps over the lazy dog.",
+        "Java is a powerful object-oriented programming language.",
+        "Typing speed and accuracy can be improved with regular practice.",
+        "Artificial Intelligence and Machine Learning are reshaping the future.",
+        "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.",
+        "Success usually comes to those who are too busy to be looking for it.",
+        "Typing fast is useful, but accuracy is the key to efficiency."
+    };
+
+    public TTypingGame() {
+        setTitle("Typing Game");
+        setSize(700, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // Main Panel
+        JPanel mainPanel = new JPanel();
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBackground(new Color(30, 30, 30));
+
+        // Timer Label
+        timerLabel = new JLabel("⏱ Time: 0s");
+        timerLabel.setFont(new Font("Consolas", Font.BOLD, 16));
+        timerLabel.setForeground(Color.GREEN);
+        timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(timerLabel);
+
+        // Text to Type Area
+        textToType = new JTextArea(3, 50);
+        textToType.setWrapStyleWord(true);
+        textToType.setLineWrap(true);
+        textToType.setEditable(false);
+        textToType.setFocusable(false);
+        textToType.setFont(new Font("Serif", Font.PLAIN, 18));
+        textToType.setBackground(new Color(50, 50, 50));
+        textToType.setForeground(Color.WHITE);
+        textToType.setMargin(new Insets(10, 10, 10, 10));
+        JScrollPane scrollPane = new JScrollPane(textToType);
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(scrollPane);
+
+        // User Input Field
+        userInput = new JTextField();
+        userInput.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        userInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        userInput.setEnabled(false);
+        userInput.addActionListener(this);
+        mainPanel.add(Box.createVerticalStrut(15));
+        mainPanel.add(userInput);
+
+        // Result Label
+        resultLabel = new JLabel("Result: ");
+        resultLabel.setFont(new Font("Consolas", Font.PLAIN, 16));
+        resultLabel.setForeground(Color.CYAN);
+        resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(resultLabel);
+
+        // Buttons Panel
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(30, 30, 30));
+        startButton = new JButton("🚀 Start");
+        resetButton = new JButton("🔁 Reset");
+        startButton.addActionListener(this);
+        resetButton.addActionListener(this);
+        buttonPanel.add(startButton);
+        buttonPanel.add(resetButton);
+        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(buttonPanel);
+
+        add(mainPanel);
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new TTypingGame());
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == startButton) {
+            startGame();
+        } else if (e.getSource() == resetButton) {
+            resetGame();
+        } else if (e.getSource() == userInput) {
+            endGame();
+        }
+    }
+
+    private void startGame() {
+        Random rand = new Random();
+        currentText = textSamples[rand.nextInt(textSamples.length)];
+        textToType.setText(currentText);
+        userInput.setText("");
+        resultLabel.setText("Result: ");
+        elapsedSeconds = 0;
+        timerLabel.setText("⏱ Time: 0s");
+
+        userInput.setEnabled(true);
+        userInput.requestFocus();
+
+        startTime = System.currentTimeMillis();
+
+        gameTimer = new Timer(1000, evt -> {
+            elapsedSeconds++;
+            timerLabel.setText("⏱ Time: " + elapsedSeconds + "s");
+        });
+        gameTimer.start();
+    }
+
+    private void resetGame() {
+        if (gameTimer != null) gameTimer.stop();
+        userInput.setText("");
+        textToType.setText("");
+        timerLabel.setText("⏱ Time: 0s");
+        resultLabel.setText("Result: ");
+        userInput.setEnabled(false);
+    }
+
+    private void endGame() {
+        if (gameTimer != null) gameTimer.stop();
+        long endTime = System.currentTimeMillis();
+        long timeTaken = endTime - startTime;
+
+        String typedText = userInput.getText().trim();
+        int typedChars = typedText.length();
+        int correctChars = 0;
+
+        for (int i = 0; i < Math.min(currentText.length(), typedChars); i++) {
+            if (typedText.charAt(i) == currentText.charAt(i)) {
+                correctChars++;
+            }
+        }
+
+        double timeTakenMinutes = timeTaken / 60000.0;
+        int cpm = (int) (typedChars / timeTakenMinutes);
+        int wpm = (int) ((typedChars / 5.0) / timeTakenMinutes);
+        double accuracy = (correctChars / (double) currentText.length()) * 100;
+
+        // Suggestion logic based on WPM
+        String suggestion;
+        if (wpm < 20) {
+            suggestion = "⚠️ Too slow. You need more practice.";
+        } else if (wpm <= 40) {
+            suggestion = "⚠️ Decent, but can be improved.";
+        } else {
+            suggestion = "✅ Great typing speed!";
+        }
+
+        resultLabel.setText(String.format(
+            "<html>✅ CPM: %d | WPM: %d | Accuracy: %.2f%%<br>%s</html>",
+            cpm, wpm, accuracy, suggestion
+        ));
+
+        userInput.setEnabled(false);
+    }
+}
