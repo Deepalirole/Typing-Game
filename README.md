@@ -43,6 +43,8 @@ Calculates Words Per Minute (WPM)
 
 Calculates Accuracy by comparing character-by-character match
 
+![image alt](https://github.com/Deepalirole/Typing-Game/blob/b2ce1c9d28869910d6b4b1ccfbd09b27349324a5/Screenshot%202025-08-23%20202354.png)
+
 Displays a Smart Suggestion based on WPM:
 
 ⚠️ WPM < 20 → Needs more practice
